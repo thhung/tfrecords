@@ -28,7 +28,7 @@ from datetime import datetime
 import hashlib
 import json
 import os
-from Queue import Queue
+from queue import Queue
 import random
 import sys
 import threading
@@ -260,7 +260,7 @@ def _process_image_files_batch(coder, thread_index, ranges, name, output_directo
 
     counter = 0
     error_counter = 0
-    for s in xrange(num_shards_per_batch):
+    for s in range(num_shards_per_batch):
         # Generate a sharded version of the file name, e.g. 'train-00002-of-00010'
         shard = thread_index * num_shards_per_batch + s
         output_filename = '%s-%.5d-of-%.5d' % (name, shard, num_shards)
@@ -368,7 +368,7 @@ def create(dataset, dataset_name, output_directory, num_shards, num_threads, shu
     spacing = np.linspace(0, len(dataset), num_threads + 1).astype(np.int)
     ranges = []
     threads = []
-    for i in xrange(len(spacing) - 1):
+    for i in range(len(spacing) - 1):
         ranges.append([spacing[i], spacing[i+1]])
 
     # Launch a thread for each batch.
@@ -385,7 +385,7 @@ def create(dataset, dataset_name, output_directory, num_shards, num_threads, shu
     error_queue = Queue()
 
     threads = []
-    for thread_index in xrange(len(ranges)):
+    for thread_index in range(len(ranges)):
         args = (coder, thread_index, ranges, dataset_name, output_directory, dataset,
                 num_shards, store_images, error_queue)
         t = threading.Thread(target=_process_image_files_batch, args=args)
