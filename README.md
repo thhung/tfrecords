@@ -1,4 +1,7 @@
 # tfrecords
+
+Recommend to run with python >= 3.6 
+
 Convenience functions to create tfrecords that can be used with classification, detection and keypoint localization systems. The [create_tfrecords.py](create_tfrecords.py) file will help create the correct tfrecords to feed into those systems. 
 
 There are configuration parameters that dictate whether to store the raw images in the tfrecords or not (`store_images=True` in `create_tfrecords.create` method or `--store_images` when calling `create_tfrecords.py` from the command line). If you choose not to store the raw images in the tfrecords, then you should be mindful that the `filename` field needs to be a valid path on the system where you will be processing the tfrecords. Also, if those images are too big, you may find that your input pipelines for your model struggle to fill the input queues. Resizing images to 800px seems to work well.  
