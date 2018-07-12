@@ -1,6 +1,10 @@
 # tfrecords
 
-Recommend to run with python >= 3.6 
+Recommend to run with python >= 3.6
+
+For prebuilted tensorflow >=1.6, please make sure that your CPU supports AVX otherwise you will get error: Illegal Instructions.
+
+Tested with python 3 and tensorflow 1.8.
 
 Convenience functions to create tfrecords that can be used with classification, detection and keypoint localization systems. The [create_tfrecords.py](create_tfrecords.py) file will help create the correct tfrecords to feed into those systems. 
 
