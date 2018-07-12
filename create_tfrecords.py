@@ -19,9 +19,9 @@ A lot of this code comes from the tensorflow inception example, so here is their
 # ==============================================================================
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import argparse
 from datetime import datetime
@@ -54,20 +54,24 @@ def _bytes_feature(value):
     """Wrapper for inserting bytes features into Example proto."""
     if not isinstance(value, list):
         value = [value]
-    return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
+
+    ## handle mixed list between str and bytes, forced everything to bytes.
+    new_value = [s.encode() if isinstance(s,str) else s for s in value]
+
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=new_value))
 
 def _validate_text(text):
     """If text is not str or unicode, then try to convert it to str."""
 
     if isinstance(text, str):
         return text
-    elif isinstance(text, unicode):
+    elif isinstance(text, str):
         return text.encode('utf8', 'ignore')
     else:
         return str(text)
 
-def _convert_to_example(image_example, image_buffer, height, width, colorspace='RGB',
-                        channels=3, image_format='JPEG'):
+def _convert_to_example(image_example, image_buffer, height, width, colorspace=b'RGB',
+                        channels=3, image_format=b'JPEG'):
     """Build an Example proto for an example.
     Args:
       image_example: dict, an image example
@@ -100,7 +104,7 @@ def _convert_to_example(image_example, image_buffer, height, width, colorspace='
     ymax = image_bboxes.get('ymax', [])
     bbox_scores = image_bboxes.get('score', [])
     bbox_labels = image_bboxes.get('label', [])
-    bbox_text = map(_validate_text, image_bboxes.get('text', []))
+    bbox_text = list(map(_validate_text, image_bboxes.get('text', [])))
     bbox_label_confs = image_bboxes.get('conf', [])
 
     # Parts
@@ -114,7 +118,7 @@ def _convert_to_example(image_example, image_buffer, height, width, colorspace='
     object_areas = image_objects.get('area', [])
 
     # Ids
-    object_ids = map(str, image_objects.get('id', []))
+    object_ids = list(map(str, image_objects.get('id', [])))
 
     # Any extra data (e.g. stringified json)
     extra_info = str(image_class.get('extra', ''))
@@ -173,7 +177,7 @@ class ImageCoder(object):
         # Initializes function that converts PNG to JPEG data.
         self._png_data = tf.placeholder(dtype=tf.string)
         image = tf.image.decode_png(self._png_data, channels=3)
-        self._png_to_jpeg = tf.image.encode_jpeg(image, format='rgb', quality=100)
+        self._png_to_jpeg = tf.image.encode_jpeg(image, format=b'rgb', quality=100)
 
         # Initializes function that decodes RGB JPEG data.
         self._decode_jpeg_data = tf.placeholder(dtype=tf.string)
@@ -213,7 +217,7 @@ def _process_image(filename, coder):
       width: integer, image width in pixels.
     """
     # Read the image file.
-    image_data = tf.gfile.FastGFile(filename, 'r').read()
+    image_data = tf.gfile.FastGFile(filename, 'rb').read()
 
     # Clean the dirty data.
     if _is_png(filename):

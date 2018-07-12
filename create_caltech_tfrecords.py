@@ -11,6 +11,9 @@
 import os
 from time import sleep
 import cv2
+
+import json
+
 from create_tfrecords import create
 
 ## path of folder contains the images of dataset
@@ -50,6 +53,7 @@ class TFRecordCreator:
             self._images_path = self._images_path + "/"
 
         if DEBUG: print("Init sucessful!!")
+        self._id = 0
 
 
 
@@ -123,16 +127,20 @@ class TFRecordCreator:
             temp_obj_dict["bbox"]["label"] = [1] * nb_object
             temp_obj_dict["bbox"]["conf"] = [1.0] * nb_object
             temp_obj_dict["bbox"]["text"] = ["person"] * nb_object
-            temp_obj_dict["id"] = range(nb_object)
+            temp_obj_dict["id"] = [str(z) for z in range(nb_object)]
 
             image_record["object"] = temp_obj_dict
+
+            image_record["id"] = str(self._id)
+            self._id+=1
 
             return image_record, nb_object
 
         ## No object annotation in current image.
         return None, 0
 
-    def create_records_caltech_format(self,dataset_name = "train" , output_path = ".", num_shards = 10, num_threads=5, store_images = True):
+    def create_records_caltech_format(self,dataset_name = "train" , output_path = ".", num_shards = 10, \
+                                      num_threads=5, store_images = True, save_dict = False):
 
         dataset = []
         directory = os.fsencode(self._annotations_path)
@@ -140,6 +148,7 @@ class TFRecordCreator:
         nb_images = 0
         files = os.listdir(directory)
         nb_files = len(files)
+
         for file in files:
             filename = os.fsdecode(file)
             if filename.endswith(".txt"):
@@ -152,10 +161,33 @@ class TFRecordCreator:
             TFRecordCreator.printProgressBar(nb_images + 1, nb_files, prefix='Progress:', suffix='Complete', length=50)
             if DEBUG: print("Done, ", nb_images)
 
+        self._id = 0
+        if save_dict:
+            with open( dataset_name + '.json', 'w') as fp:
+                json.dump(dataset, fp)
+
+        TFRecordCreator.generate_records_file(dataset, dataset_name, output_path, \
+                                              num_shards, num_shards, store_images)
+
+
+    @staticmethod
+    def create_record_from_saved_dict(json_data_file_name, dataset_name = "train" , output_path = ".", \
+                                      num_shards = 10, num_threads=5, store_images = True):
+
+        with open(json_data_file_name, 'r') as fp:
+            saved_dict = json.load(fp)
+
+        TFRecordCreator.generate_records_file(saved_dict, dataset_name, output_path, \
+                                              num_shards, num_shards, store_images)
+
+
+    @staticmethod
+    def generate_records_file(saved_dict, dataset_name = "train" , output_path = ".", num_shards = 10, \
+                                      num_threads=5, store_images = True):
         failed_images = create(
-            dataset=dataset,
+            dataset=saved_dict,
             dataset_name=dataset_name,
-            output_directory= output_path,
+            output_directory=output_path,
             num_shards=num_shards,
             num_threads=num_threads,
             store_images=store_images
@@ -165,6 +197,7 @@ class TFRecordCreator:
         print("%d images failed." % (len(failed_images),))
         for image_data in failed_images:
             print("Image %s: %s" % (image_data['id'], image_data['error_msg']))
+
 
     @staticmethod
     # Print iterations progress
