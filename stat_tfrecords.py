@@ -3,9 +3,9 @@ These utility functions are meant for computing basic statistics in a set of tfr
 files. They can be used to sanity check the training and testing files.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import argparse
 import numpy as np
@@ -64,7 +64,7 @@ def class_stats(tfrecords):
     print("Found %d images" % (image_count,))
     print("Found %d classes" % (len(class_image_count),))
 
-    class_labels = class_image_count.keys()
+    class_labels = list(class_image_count.keys())
     class_labels.sort()
 
     # Print out the per class image counts
